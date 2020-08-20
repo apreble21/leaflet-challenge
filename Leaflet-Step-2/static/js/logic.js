@@ -1,6 +1,6 @@
 // URL to earthquake json data
 var queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
-
+var faultlinequery = "https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_plates.json";
 // function to determine marker size based on magnitude
 function markerSize(magnitude) {
     return magnitude * 5;
@@ -71,10 +71,10 @@ function addPopup(feature, layer) {
 //layers
 function createMap(earthquakes) {
 
-    var lightmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+    var streetmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
       attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
       maxZoom: 18,
-      id: "light-v10",
+      id: "streets-v11",
       accessToken: "pk.eyJ1IjoiYXByZWJsZTIxIiwiYSI6ImNrY2h1YmdvdjBhd2gyd21pMGszYmM3MnIifQ.nhcXk1qrAKgrRFZbMF4i6Q"
     });
   
@@ -84,24 +84,52 @@ function createMap(earthquakes) {
       id: "dark-v10",
       accessToken: "pk.eyJ1IjoiYXByZWJsZTIxIiwiYSI6ImNrY2h1YmdvdjBhd2gyd21pMGszYmM3MnIifQ.nhcXk1qrAKgrRFZbMF4i6Q"
     });
+
+    var satellitemap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+      attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
+      maxZoom: 18,
+      id: "satellite-v9",
+      accessToken: "pk.eyJ1IjoiYXByZWJsZTIxIiwiYSI6ImNrY2h1YmdvdjBhd2gyd21pMGszYmM3MnIifQ.nhcXk1qrAKgrRFZbMF4i6Q"
+    });
+    
+    var outdoorsmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+      attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
+      maxZoom: 18,
+      id: "outdoors-v11",
+      accessToken: "pk.eyJ1IjoiYXByZWJsZTIxIiwiYSI6ImNrY2h1YmdvdjBhd2gyd21pMGszYmM3MnIifQ.nhcXk1qrAKgrRFZbMF4i6Q"
+    });
   
     // Base map layer
     var baseMaps = {
-      "Street Map": lightmap,
-      "Dark Map": darkmap
+      "Street Map": streetmap,
+      "Dark Map": darkmap,
+      "Satellite Map": satellitemap,
+      "Outdoors Map": outdoorsmap
     };
+    // Create the faultline layer
+    var faultLine = new L.LayerGroup();
   
     // Overlay map of earthquakes 
     var overlayMaps = {
-      Earthquakes: earthquakes
+      Earthquakes: earthquakes,
+      FaultLines: faultLine
     };
   
     // Create inital map settings
     var myMap = L.map("map", {
       center: [37.09, -95.71],
       zoom: 5,
-      layers: [lightmap, earthquakes]
+      layers: [satellitemap, earthquakes, faultLine]
     });
+    // Create the faultlines and add them to the faultline layer
+    d3.json(faultlinequery, function(data) {
+      L.geoJSON(data, {
+        style: function() {
+          return {color: "black", fillOpacity: 0}
+        }
+      }).addTo(faultLine)
+    })
+
   
     // creating the legend
     var legend = L.control({position: 'bottomright'});
